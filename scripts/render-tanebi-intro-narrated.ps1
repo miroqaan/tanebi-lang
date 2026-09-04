@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Output = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\videos\tanebi-introduction-ja-narrated.mp4'),
+    [string]$Output = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\videos\tanebi-introduction-ja-narrated-1080p.mp4'),
     [string]$Voice = 'ja-JP-NanamiNeural'
 )
 
@@ -19,6 +19,9 @@ $ffprobe = (Get-Command ffprobe -ErrorAction Stop).Source
 $python = (Get-Command py -ErrorAction Stop).Source
 $width = 1280
 $height = 720
+$renderWidth = 1920
+$renderHeight = 1080
+$renderScale = $renderWidth / $width
 
 function Get-CodeLines([string]$relativePath, [int]$start, [int]$end) {
     $all = Get-Content -LiteralPath (Join-Path $repositoryRoot $relativePath) -Encoding UTF8
@@ -59,11 +62,12 @@ function Draw-Flame($graphics, [float]$x, [float]$y, [float]$scale) {
 }
 
 function New-SceneFrame($scene, [int]$index, [int]$count) {
-    $bitmap = [System.Drawing.Bitmap]::new($width, $height)
+    $bitmap = [System.Drawing.Bitmap]::new($renderWidth, $renderHeight)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
     $graphics.Clear([System.Drawing.Color]::FromArgb(8, 14, 28))
+    $graphics.ScaleTransform($renderScale, $renderScale)
 
     $white = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(244, 247, 255))
     $muted = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(154, 171, 203))
@@ -139,7 +143,7 @@ $scenes = @(
         Path = 'README.md'
         Code = Get-CodeLines 'README.md' 1 15
         Notes = @('Go製のインタープリター', '小さく決定論的', 'Unicode識別子')
-        Narration = 'TANEBI、種火。一行のコードが、世界に火を灯す。TANEBIは、Goで実装した、小さくて決定論的なインタープリター言語です。'
+        Narration = '種火。一行のコードが、世界に火を灯す。TANEBIは、Goで実装した、小さくて決定論的なインタープリター言語です。'
     },
     [pscustomobject]@{
         Eyebrow = '02 · GO CLI'
@@ -220,7 +224,7 @@ for ($index = 0; $index -lt $scenes.Count; $index++) {
 
     $durationText = & $ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $audio
     $duration = [math]::Ceiling(([double]::Parse($durationText, [Globalization.CultureInfo]::InvariantCulture) + 0.45) * 100) / 100
-    & $ffmpeg -y -loop 1 -i $frame -i $audio -t $duration -vf "scale=1280:720,zoompan=z='min(zoom+0.00018,1.018)':d=9999:s=1280x720:fps=30,format=yuv420p" -af 'apad=pad_dur=0.45' -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 160k -ar 48000 -ac 2 -shortest $segment
+    & $ffmpeg -y -loop 1 -i $frame -i $audio -t $duration -vf "scale=${renderWidth}:${renderHeight},zoompan=z='min(zoom+0.00012,1.012)':d=9999:s=${renderWidth}x${renderHeight}:fps=30,format=yuv420p" -af 'apad=pad_dur=0.45' -c:v libx264 -preset medium -crf 16 -c:a aac -b:a 160k -ar 48000 -ac 2 -shortest $segment
     if ($LASTEXITCODE -ne 0) { throw "Video segment render failed for scene $number." }
     $segments += $segment
 }
