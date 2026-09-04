@@ -88,6 +88,8 @@ Microsoft WindowsそのものやMicrosoftの素材を再配布するものでは
 
 Webデモとは別に、x86-64 UEFIから直接起動するNative Stage 1があります。TANEBIで起動マニフェストを生成し、Rust `no_std`カーネルがGOPフレームバッファーへデスクトップを直接描画します。
 
+独立公開プロジェクト: [miroqaan/tanebi-95](https://github.com/miroqaan/tanebi-95)
+
 ```powershell
 .\native\tanebi95\scripts\build.ps1
 .\native\tanebi95\scripts\run.ps1
