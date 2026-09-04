@@ -3,7 +3,8 @@
 *.iml
 
 # Go build and test outputs
-/mini-language-go.exe
+/tanebi
+/tanebi.exe
 *.test
 *.out
 coverage.*

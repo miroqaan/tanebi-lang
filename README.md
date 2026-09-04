@@ -1,50 +1,78 @@
-# Go로 만든 Mini 언어
+# TANEBI（種火）
 
-Go 표준 라이브러리만 사용해 구현한 작은 인터프리터입니다.
+> 一行のコードが、世界に火を灯す。
 
-## 지원 문법
+[한국어](./README.ko.md)
 
-```mini
-# 한글 변수도 사용할 수 있습니다.
-let 너비 = 10
-let 높이 = 5
-print 너비 * 높이
-print (너비 + 높이) / 2
+TANEBIは、Goの標準ライブラリだけで実装した、小さく決定論的なインタープリターです。電卓ほどの小さな種火から始まり、条件分岐、繰り返し、関数、そしてゲームスクリプト言語へ成長していく過程そのものを見せる、アカギユニバースのプロジェクトです。
+
+## 設計原則
+
+- **小さくても完全に**：Lexer → Parser → AST → Interpreterを分離します。
+- **世界中の言葉で**：英語のキーワードと、日本語・韓国語を含むUnicode識別子を使えます。
+- **常に同じ結果を**：時刻、ネットワーク、暗黙の乱数を言語コアに持ち込みません。
+- **明示的に**：数値・文字列・真偽値を暗黙に型変換しません。
+- **軽く**：外部依存なしの単一Goバイナリとしてビルドできます。
+
+## サンプル
+
+```tanebi
+let 名前 = "アカギ"
+let 種火 = 3
+
+repeat 種火 {
+    print 名前 + "の世界が目を覚ます"
+}
+
+if 種火 >= 3 {
+    print "種火は消えない"
+} else {
+    print "もう一度、火を灯す"
+}
 ```
 
-- `let 이름 = 표현식`: 변수 선언 또는 값 변경
-- `print 표현식`: 결과 출력
-- 정수와 소수
-- `+`, `-`, `*`, `/`, 단항 `+`와 `-`
-- 줄바꿈 또는 `;`로 문장 구분
-- `#`부터 줄 끝까지 주석
+## 現在の言語機能
 
-## 실행
+| 分類 | 構文 |
+|---|---|
+| 値 | 数値、文字列、`true`、`false` |
+| 変数 | `let name = expression`、`name = expression` |
+| 出力 | `print expression` |
+| 繰り返し | `repeat count { ... }` |
+| 条件分岐 | `if condition { ... } else { ... }` |
+| 演算子 | `+ - * / %`、`== != < <= > >=`、`&& || !` |
+| 文の区切り | 改行または`;` |
+| コメント | `#`から行末まで |
 
-Go 1.22 이상이 필요합니다.
+`+`は数値同士の加算、または文字列同士の結合に使います。条件式は真偽値、`repeat`の回数は0以上の整数でなければなりません。
+
+## 実行
+
+Go 1.22以上が必要です。
 
 ```powershell
-cd "C:\Users\wavus\IdeaProjects\mini-language-go"
-go run . example.mini
+go run ./cmd/tanebi ./examples/awakening.tanebi
 ```
 
-예상 출력:
-
-```text
-3100
-5
-```
-
-테스트:
+テストとビルド：
 
 ```powershell
 go test ./...
+go build ./cmd/tanebi
 ```
 
-## 구현 구조
+## プロジェクト構成
 
 ```text
-Mini 소스 → Lexer → Token → Parser → AST → Interpreter → 출력
+cmd/tanebi/       CLIエントリーポイント
+internal/tanebi/  Token、Lexer、AST、Parser、Interpreter
+examples/         実行可能なTANEBIプログラム
 ```
 
-`main.go` 안에서 각 단계를 순서대로 살펴볼 수 있습니다. 다음 확장 단계로 비교 연산자, `if`, `while`, 함수를 추가할 수 있습니다.
+## Roadmap
+
+- ユーザー定義関数と`return`
+- ListとMap
+- ゲームイベント・会話スクリプトAPI
+- seedを明示する決定論的乱数
+- エディター向けシンタックスハイライト

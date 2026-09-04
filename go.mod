@@ -1,3 +1,3 @@
-module mini-language-go
+module github.com/miroqaan/tanebi-lang
 
 go 1.22
