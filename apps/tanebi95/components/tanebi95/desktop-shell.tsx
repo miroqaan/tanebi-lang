@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   BookOpenText,
   ChevronRight,
-  Computer,
   FileCode2,
   FileText,
   Flame,
@@ -36,7 +35,7 @@ const defaultProfile: SystemProfile = {
   name: 'TANEBI 95',
   motto: '一行のコードが、世界に火を灯す。',
   labels: {
-    computer: 'マイ コンピュータ',
+    computer: 'TANEBI 95',
     studio: 'TANEBI Studio',
     documents: 'ドキュメント',
     recycle: 'ごみ箱',
@@ -45,7 +44,7 @@ const defaultProfile: SystemProfile = {
 };
 
 const icons = {
-  computer: Computer,
+  computer: Flame,
   studio: Flame,
   documents: FolderClosed,
   recycle: Recycle,
@@ -53,7 +52,7 @@ const icons = {
 };
 
 const initialWindows: Record<WindowId, WindowModel> = {
-  computer: { id: 'computer', title: 'マイ コンピュータ', icon: Computer, x: 148, y: 72, width: 570, height: 370, z: 2, open: true, minimized: false, maximized: false },
+  computer: { id: 'computer', title: 'TANEBI 95', icon: Flame, x: 148, y: 72, width: 570, height: 370, z: 2, open: true, minimized: false, maximized: false },
   studio: { id: 'studio', title: 'TANEBI Studio', icon: Flame, x: 255, y: 105, width: 760, height: 500, z: 1, open: false, minimized: false, maximized: false },
   documents: { id: 'documents', title: 'ドキュメント', icon: FolderClosed, x: 210, y: 118, width: 560, height: 350, z: 1, open: false, minimized: false, maximized: false },
   recycle: { id: 'recycle', title: 'ごみ箱', icon: Recycle, x: 310, y: 155, width: 420, height: 260, z: 1, open: false, minimized: false, maximized: false },
@@ -146,7 +145,7 @@ export function DesktopShell() {
   }
 
   const desktopItems: Array<{ id: WindowId; label: string }> = [
-    { id: 'computer', label: profile.labels.computer ?? 'マイ コンピュータ' },
+    { id: 'computer', label: profile.labels.computer ?? 'TANEBI 95' },
     { id: 'studio', label: profile.labels.studio ?? 'TANEBI Studio' },
     { id: 'documents', label: profile.labels.documents ?? 'ドキュメント' },
     { id: 'recycle', label: profile.labels.recycle ?? 'ごみ箱' },
