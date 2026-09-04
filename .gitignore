@@ -1,0 +1,13 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Go build and test outputs
+/mini-language-go.exe
+*.test
+*.out
+coverage.*
+
+# Operating system files
+.DS_Store
+Thumbs.db
