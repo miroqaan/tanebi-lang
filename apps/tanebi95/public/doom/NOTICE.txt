@@ -1,0 +1,16 @@
+TANEBI 95 DOOM player
+
+This distribution contains no proprietary DOOM game data.
+
+Engine: Chocolate Doom, GPL-2.0-or-later
+Upstream: https://github.com/chocolate-doom/chocolate-doom
+
+Browser build integration: doom-wasm, GPL-2.0-or-later
+Pinned source: https://github.com/gabrielbotandev/doom-wasm/tree/64de0924591dec59a7d49a7d10467e125b50ea99
+
+Game data: Freedoom 0.13.0 Phase 2
+Upstream: https://github.com/freedoom/freedoom/tree/v0.13.0
+
+The full license and attribution texts are in /doom/licenses/.
+DOOM is a trademark of id Software. TANEBI 95 is not affiliated with or
+endorsed by id Software or Microsoft.

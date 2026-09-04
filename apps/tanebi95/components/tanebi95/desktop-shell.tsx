@@ -4,10 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   BookOpenText,
   ChevronRight,
+  Clapperboard,
+  Cpu,
   FileCode2,
   FileText,
   Flame,
   FolderClosed,
+  Gamepad2,
+  Gauge,
   HardDrive,
   Info,
   MonitorCog,
@@ -19,10 +23,13 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { loadTanebi } from '@/lib/tanebi-runtime';
+import { DoomPlayer } from './doom-player';
+import { MediaPlayer } from './media-player';
+import { SystemMonitor } from './system-monitor';
 import { TanebiStudio } from './tanebi-studio';
 import { WindowFrame, type WindowModel } from './window-frame';
 
-type WindowId = 'computer' | 'studio' | 'documents' | 'recycle' | 'about';
+type WindowId = 'computer' | 'studio' | 'doom' | 'media' | 'monitor' | 'documents' | 'recycle' | 'about';
 
 type SystemProfile = {
   name: string;
@@ -37,6 +44,9 @@ const defaultProfile: SystemProfile = {
   labels: {
     computer: 'TANEBI 95',
     studio: 'TANEBI Studio',
+    doom: 'TANEBI 95 DOOM',
+    media: 'メディア プレーヤー',
+    monitor: 'システム モニター',
     documents: 'ドキュメント',
     recycle: 'ごみ箱',
   },
@@ -46,6 +56,9 @@ const defaultProfile: SystemProfile = {
 const icons = {
   computer: Flame,
   studio: Flame,
+  doom: Gamepad2,
+  media: Clapperboard,
+  monitor: Gauge,
   documents: FolderClosed,
   recycle: Recycle,
   about: Info,
@@ -54,6 +67,9 @@ const icons = {
 const initialWindows: Record<WindowId, WindowModel> = {
   computer: { id: 'computer', title: 'TANEBI 95', icon: Flame, x: 148, y: 72, width: 570, height: 370, z: 2, open: true, minimized: false, maximized: false },
   studio: { id: 'studio', title: 'TANEBI Studio', icon: Flame, x: 255, y: 105, width: 760, height: 500, z: 1, open: false, minimized: false, maximized: false },
+  doom: { id: 'doom', title: 'TANEBI 95 DOOM', icon: Gamepad2, x: 180, y: 52, width: 880, height: 620, z: 1, open: false, minimized: false, maximized: false },
+  media: { id: 'media', title: 'メディア プレーヤー', icon: Clapperboard, x: 230, y: 75, width: 820, height: 560, z: 1, open: false, minimized: false, maximized: false },
+  monitor: { id: 'monitor', title: 'システム モニター', icon: Gauge, x: 310, y: 92, width: 700, height: 470, z: 1, open: false, minimized: false, maximized: false },
   documents: { id: 'documents', title: 'ドキュメント', icon: FolderClosed, x: 210, y: 118, width: 560, height: 350, z: 1, open: false, minimized: false, maximized: false },
   recycle: { id: 'recycle', title: 'ごみ箱', icon: Recycle, x: 310, y: 155, width: 420, height: 260, z: 1, open: false, minimized: false, maximized: false },
   about: { id: 'about', title: 'TANEBI 95 について', icon: Info, x: 380, y: 125, width: 480, height: 330, z: 1, open: false, minimized: false, maximized: false },
@@ -147,6 +163,9 @@ export function DesktopShell() {
   const desktopItems: Array<{ id: WindowId; label: string }> = [
     { id: 'computer', label: profile.labels.computer ?? 'TANEBI 95' },
     { id: 'studio', label: profile.labels.studio ?? 'TANEBI Studio' },
+    { id: 'doom', label: profile.labels.doom ?? 'TANEBI 95 DOOM' },
+    { id: 'media', label: profile.labels.media ?? 'メディア プレーヤー' },
+    { id: 'monitor', label: profile.labels.monitor ?? 'システム モニター' },
     { id: 'documents', label: profile.labels.documents ?? 'ドキュメント' },
     { id: 'recycle', label: profile.labels.recycle ?? 'ごみ箱' },
   ];
@@ -200,8 +219,10 @@ export function DesktopShell() {
           <div className="start-rail"><span>TANEBI</span><strong>95</strong></div>
           <div className="start-items">
             <button type="button" onClick={() => openWindow('studio')}><Flame /><span>プログラム</span><ChevronRight /></button>
+            <button type="button" onClick={() => openWindow('doom')}><Gamepad2 /><span>DOOM</span><ChevronRight /></button>
+            <button type="button" onClick={() => openWindow('media')}><Clapperboard /><span>メディア</span><ChevronRight /></button>
             <button type="button" onClick={() => openWindow('documents')}><FileText /><span>ドキュメント</span><ChevronRight /></button>
-            <button type="button" onClick={() => openWindow('computer')}><MonitorCog /><span>システム</span><ChevronRight /></button>
+            <button type="button" onClick={() => openWindow('monitor')}><MonitorCog /><span>システム</span><ChevronRight /></button>
             <button type="button" onClick={() => openWindow('about')}><Info /><span>TANEBI 95について</span></button>
             <hr />
             <button type="button" onClick={() => setShutdown(true)}><Power /><span>シャットダウン...</span></button>
@@ -232,6 +253,9 @@ export function DesktopShell() {
 
 function WindowContent({ id, profile, openWindow }: { id: WindowId; profile: SystemProfile; openWindow: (id: WindowId) => void }) {
   if (id === 'studio') return <TanebiStudio />;
+  if (id === 'doom') return <DoomPlayer />;
+  if (id === 'media') return <MediaPlayer />;
+  if (id === 'monitor') return <SystemMonitor openWindow={openWindow} />;
   if (id === 'computer') {
     return (
       <div className="window-layout">
@@ -240,9 +264,12 @@ function WindowContent({ id, profile, openWindow }: { id: WindowId; profile: Sys
         <div className="computer-grid">
           <button type="button"><HardDrive /><span><strong>System Host (C:)</strong><small>Go services · 95 MB</small></span></button>
           <button type="button" onDoubleClick={() => openWindow('studio')}><TerminalSquare /><span><strong>TANEBI Space (T:)</strong><small>User scripts · WASM</small></span></button>
+          <button type="button" onDoubleClick={() => openWindow('doom')}><Gamepad2 /><span><strong>DOOM Games (D:)</strong><small>Chocolate Doom · Freedoom · WASM</small></span></button>
+          <button type="button" onDoubleClick={() => openWindow('media')}><Clapperboard /><span><strong>Akagi Media (M:)</strong><small>YouTube · sound enabled</small></span></button>
+          <button type="button" onDoubleClick={() => openWindow('monitor')}><Cpu /><span><strong>System Monitor</strong><small>Runtime · architecture · tour</small></span></button>
           <button type="button" onDoubleClick={() => openWindow('documents')}><FileText /><span><strong>README.TXT</strong><small>Architecture notes</small></span></button>
         </div>
-        <footer className="status-bar">3 個のオブジェクト · TANEBI user space online</footer>
+        <footer className="status-bar">6 個のオブジェクト · TANEBI user space online</footer>
       </div>
     );
   }
@@ -270,6 +297,8 @@ function WindowContent({ id, profile, openWindow }: { id: WindowId; profile: Sys
       <dl>
         <div><dt>System</dt><dd>Go host services</dd></div>
         <div><dt>User space</dt><dd>TANEBI WebAssembly</dd></div>
+        <div><dt>Games</dt><dd>Chocolate Doom · Freedoom · WebAssembly</dd></div>
+        <div><dt>Media</dt><dd>YouTube privacy-enhanced player</dd></div>
         <div><dt>Reference</dt><dd>GopherOS boundary architecture</dd></div>
       </dl>
       <p className="copyright">Akagi Universe · deterministic creative system</p>

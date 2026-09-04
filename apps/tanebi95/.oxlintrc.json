@@ -32,6 +32,8 @@
     "components/ui/**",
     "hooks/use-mobile.ts",
     "public/wasm_exec.js",
+    "public/doom/**",
+    "public/vendor/**",
     "next-env.d.ts"
   ],
   "rules": {

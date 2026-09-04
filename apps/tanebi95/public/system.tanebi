@@ -6,8 +6,13 @@ print "SYSTEM|" + システム
 print "MOTTO|" + 合言葉
 print "ICON|computer|TANEBI 95"
 print "ICON|studio|TANEBI Studio"
+print "ICON|doom|TANEBI 95 DOOM"
+print "ICON|media|メディア プレーヤー"
+print "ICON|monitor|システム モニター"
 print "ICON|documents|ドキュメント"
 print "ICON|recycle|ごみ箱"
 print "BOOT|Rust kernel boundary: referenced"
 print "BOOT|Go host services: online"
+print "BOOT|WebAssembly game layer: armed"
+print "BOOT|Akagi media services: online"
 print "BOOT|TANEBI user space: ignited"

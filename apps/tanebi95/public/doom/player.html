@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TANEBI 95 DOOM</title>
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000; }
+      body { display: grid; place-items: center; font-family: "MS Gothic", monospace; }
+      canvas { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; outline: 0; }
+      #boot { position: fixed; inset: 0; display: grid; place-items: center; color: #fff; background: #000; text-align: center; }
+      #boot[hidden] { display: none; }
+      #boot strong { display: block; margin-bottom: .65rem; color: #ffb000; font-size: 1.2rem; }
+      #boot.error { color: #ff8a8a; padding: 2rem; }
+    </style>
+  </head>
+  <body>
+    <canvas id="doom-canvas" width="320" height="200" tabindex="0" aria-label="Freedoom game canvas"></canvas>
+    <div id="boot"><div><strong>TANEBI 95 DOOM</strong><span>WebAssemblyエンジンを読み込んでいます…</span></div></div>
+    <script type="module" src="./player.js"></script>
+  </body>
+</html>
