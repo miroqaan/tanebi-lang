@@ -8,6 +8,8 @@
 *.test
 *.out
 coverage.*
+/build/
+/native/tanebi95/kernel/target/
 
 # Operating system files
 .DS_Store

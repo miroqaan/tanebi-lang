@@ -11,3 +11,5 @@
 *.ts text eol=lf
 *.tsx text eol=lf
 *.wasm binary
+*.efi binary
+*.img binary

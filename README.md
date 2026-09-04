@@ -84,6 +84,17 @@ npm run dev
 
 Microsoft WindowsそのものやMicrosoftの素材を再配布するものではありません。
 
+## TANEBI 95 Native OS
+
+Webデモとは別に、x86-64 UEFIから直接起動するNative Stage 1があります。TANEBIで起動マニフェストを生成し、Rust `no_std`カーネルがGOPフレームバッファーへデスクトップを直接描画します。
+
+```powershell
+.\native\tanebi95\scripts\build.ps1
+.\native\tanebi95\scripts\run.ps1
+```
+
+境界と成果物の詳細は[`native/tanebi95/README.md`](./native/tanebi95/README.md)を参照してください。
+
 ## Roadmap
 
 - ユーザー定義関数と`return`

@@ -84,6 +84,17 @@ npm run dev
 
 Microsoft Windows 자체나 Microsoft의 에셋을 재배포하지 않습니다.
 
+## TANEBI 95 Native OS
+
+웹 데모와 별도로 x86-64 UEFI에서 직접 부팅되는 네이티브 Stage 1이 있습니다. TANEBI로 부팅 매니페스트를 생성하고 Rust `no_std` 커널이 GOP 프레임버퍼에 데스크톱을 직접 그립니다.
+
+```powershell
+.\native\tanebi95\scripts\build.ps1
+.\native\tanebi95\scripts\run.ps1
+```
+
+자세한 경계와 산출물은 [`native/tanebi95/README.md`](./native/tanebi95/README.md)를 참고하세요.
+
 ## Roadmap
 
 - 사용자 정의 함수와 `return`
