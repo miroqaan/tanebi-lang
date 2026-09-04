@@ -9,6 +9,7 @@
 *.out
 coverage.*
 /build/
+/artifacts/
 /native/tanebi95/kernel/target/
 
 # Operating system files
