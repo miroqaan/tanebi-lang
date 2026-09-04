@@ -4,7 +4,7 @@ let 合言葉 = "一行のコードが、世界に火を灯す。"
 
 print "SYSTEM|" + システム
 print "MOTTO|" + 合言葉
-print "ICON|computer|マイ コンピュータ"
+print "ICON|computer|TANEBI 95"
 print "ICON|studio|TANEBI Studio"
 print "ICON|documents|ドキュメント"
 print "ICON|recycle|ごみ箱"
