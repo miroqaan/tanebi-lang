@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Output = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\videos\tanebi-introduction-ja-narrated-1080p.mp4'),
+    [string]$Output = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\videos\tanebi-introduction-ja-narrated-1440p.mp4'),
     [string]$Voice = 'ja-JP-NanamiNeural'
 )
 
@@ -19,8 +19,8 @@ $ffprobe = (Get-Command ffprobe -ErrorAction Stop).Source
 $python = (Get-Command py -ErrorAction Stop).Source
 $width = 1280
 $height = 720
-$renderWidth = 1920
-$renderHeight = 1080
+$renderWidth = 2560
+$renderHeight = 1440
 $renderScale = $renderWidth / $width
 
 function Get-CodeLines([string]$relativePath, [int]$start, [int]$end) {
@@ -224,7 +224,7 @@ for ($index = 0; $index -lt $scenes.Count; $index++) {
 
     $durationText = & $ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $audio
     $duration = [math]::Ceiling(([double]::Parse($durationText, [Globalization.CultureInfo]::InvariantCulture) + 0.45) * 100) / 100
-    & $ffmpeg -y -loop 1 -i $frame -i $audio -t $duration -vf "scale=${renderWidth}:${renderHeight},zoompan=z='min(zoom+0.00012,1.012)':d=9999:s=${renderWidth}x${renderHeight}:fps=30,format=yuv420p" -af 'apad=pad_dur=0.45' -c:v libx264 -preset medium -crf 16 -c:a aac -b:a 160k -ar 48000 -ac 2 -shortest $segment
+    & $ffmpeg -y -loop 1 -framerate 30 -i $frame -i $audio -t $duration -vf "format=yuv420p" -af 'apad=pad_dur=0.45' -c:v libx264 -preset slow -tune stillimage -crf 12 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:a aac -b:a 160k -ar 48000 -ac 2 -shortest $segment
     if ($LASTEXITCODE -ne 0) { throw "Video segment render failed for scene $number." }
     $segments += $segment
 }
