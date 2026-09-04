@@ -67,7 +67,22 @@ go build ./cmd/tanebi
 cmd/tanebi/       CLIエントリーポイント
 internal/tanebi/  Token、Lexer、AST、Parser、Interpreter
 examples/         実行可能なTANEBIプログラム
+cmd/tanebi-wasm/  ブラウザー向けGo/WASMブリッジ
+apps/tanebi95/    TANEBI 95デスクトップ環境
 ```
+
+## TANEBI 95
+
+TANEBI 95は、TANEBIプログラムをブラウザー上で直接編集・実行できる、1990年代のデスクトップに着想を得たオリジナルのシェルです。`gopher-os`のカーネル／ユーザー空間の分離を参考に、Go/WASMランタイムをホスト、TANEBIスクリプトをユーザー空間として構成しています。
+
+```powershell
+cd apps/tanebi95
+npm install
+npm run wasm
+npm run dev
+```
+
+Microsoft WindowsそのものやMicrosoftの素材を再配布するものではありません。
 
 ## Roadmap
 
