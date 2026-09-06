@@ -1,0 +1,19 @@
+# TANEBI システム言語の最小 UEFI エントリーポイント。
+const VERSION:u64 = 1;
+buffer SCRATCH[256];
+
+fn checksum(text:str)->u64 {
+    let result:u64 = 0;
+    let index:u64 = 0;
+    while index < len(text) {
+        result = result + byte(text,index);
+        index = index + 1;
+    }
+    return result;
+}
+
+fn entry(image:u64,st:u64)->u64 {
+    zero(addr(SCRATCH),len(SCRATCH));
+    store64(addr(SCRATCH),checksum("TANEBI") + VERSION);
+    return 0;
+}
