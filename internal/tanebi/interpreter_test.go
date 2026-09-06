@@ -16,7 +16,7 @@ func outputOf(t *testing.T, source string) string {
 }
 
 func TestArithmeticAndUnicodeVariables(t *testing.T) {
-	source := "let 가격 = 1200\nlet 수량 = 3\nprint 가격 * 수량 - 500\n"
+	source := "let 価格 = 1200\nlet 数量 = 3\nprint 価格 * 数量 - 500\n"
 	if got, want := outputOf(t, source), "3100\n"; got != want {
 		t.Fatalf("output = %q, want %q", got, want)
 	}
@@ -24,8 +24,8 @@ func TestArithmeticAndUnicodeVariables(t *testing.T) {
 
 func TestStringsRepeatAndJapaneseIdentifier(t *testing.T) {
 	source := `let 名前 = "アカギ"
-let 불꽃 = 3
-repeat 불꽃 {
+let 種火 = 3
+repeat 種火 {
     print 名前 + "の世界が目を覚ます"
 }
 `
@@ -68,7 +68,7 @@ func TestIfWithoutElsePreservesFollowingStatement(t *testing.T) {
 }
 
 func TestStringEscapes(t *testing.T) {
-	if got, want := outputOf(t, `print "불씨\n種火"`), "불씨\n種火\n"; got != want {
+	if got, want := outputOf(t, `print "灯火\n種火"`), "灯火\n種火\n"; got != want {
 		t.Fatalf("output = %q, want %q", got, want)
 	}
 }

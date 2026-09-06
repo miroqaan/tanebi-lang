@@ -1,29 +1,29 @@
 # TANEBI 95
 
-TANEBI 95는 1990년대 데스크톱 인터페이스에서 영감을 얻은 TANEBI 실행 환경입니다. 브라우저 안에서 창을 이동하고 최소화하거나 최대화할 수 있으며, TANEBI Studio에서 실제 TANEBI 코드를 실행합니다.
+このディレクトリは、1990年代のデスクトップインターフェースに着想を得た TANEBI 95 の Web 版です。ブラウザー内でウィンドウを移動・最小化・最大化し、TANEBI Studio で実際の TANEBI コードを実行できます。QEMU で起動する独立 OS 版は [tanebi-95](https://github.com/miroqaan/tanebi-95) を参照してください。
 
-## 주요 기능
+## 主な機能
 
-- **TANEBI Studio**: Unicode 식별자를 사용하는 TANEBI 코드를 Go/WebAssembly로 직접 실행합니다.
-- **TANEBI 95 DOOM**: 공개된 Chocolate Doom 엔진을 WebAssembly로 구동하고 Freedoom Phase 2 데이터를 사용합니다.
-- **미디어 플레이어**: 아카기유니버스의 지정 YouTube 영상을 16분 14초부터 소리와 함께 재생합니다.
-- **시스템 모니터**: 실행 시간, JavaScript 힙, 런타임 경계와 기능 투어를 표시합니다.
+- **TANEBI Studio**: Unicode 識別子を使った TANEBI コードを Go/WebAssembly で実行します。
+- **TANEBI 95 DOOM**: 公開されている Chocolate Doom エンジンを WebAssembly で動かし、Freedoom Phase 2 のゲームデータを使用します。
+- **メディアプレイヤー**: アカギユニバースの指定 YouTube 動画を、16分14秒から音声付きで再生します。
+- **システムモニター**: 稼働時間、JavaScript ヒープ、ランタイムの境界、機能ツアーを表示します。
 
-## 구조
+## 構成
 
 ```text
-브라우저 데스크톱 (React / vinext)
+ブラウザーデスクトップ (React / vinext)
               ↓
-Go WebAssembly 호스트 (cmd/tanebi-wasm)
+Go WebAssembly ホスト (cmd/tanebi-wasm)
               ↓
-TANEBI 사용자 공간 (Lexer → Parser → AST → Interpreter)
+TANEBI スクリプト層 (Lexer → Parser → AST → Interpreter)
 ```
 
-이 경계는 `gopher-os`의 Rust 커널과 Go 사용자 공간 분리에서 아이디어를 얻었습니다. 코드는 복사하지 않았으며, TANEBI 95는 실제 운영체제나 Microsoft Windows 배포물이 아닌 독자적인 웹 데스크톱입니다.
+この境界は、`gopher-os` の Rust カーネルと Go ユーザー空間の分離を参考にしています。コードはコピーしていません。この Web 版は独自のブラウザーデスクトップであり、実際に起動する OS や Microsoft Windows の配布物ではありません。
 
-## 개발
+## 開発
 
-Node.js 22.13 이상과 Go 1.22 이상이 필요합니다.
+Node.js 22.13 以降と Go 1.22 以降が必要です。
 
 ```powershell
 npm install
@@ -32,7 +32,7 @@ npm run prepare:doom
 npm run dev
 ```
 
-## 검증
+## 検証
 
 ```powershell
 npm run lint
@@ -41,10 +41,10 @@ npm run build
 npm audit --omit=dev --audit-level=high
 ```
 
-`public/system.tanebi`는 부팅 시 실행되어 데스크톱 이름, 문구, 아이콘 라벨과 부팅 메시지를 구성합니다.
+`public/system.tanebi` は起動時に実行され、デスクトップ名、キャッチコピー、アイコンのラベル、起動メッセージを設定します。
 
-## DOOM 라이선스 경계
+## DOOM のライセンスと帰属
 
-상용 DOOM 게임 데이터는 포함하지 않습니다. 브라우저 게임은 GPL-2.0-or-later의 [Chocolate Doom](https://github.com/chocolate-doom/chocolate-doom), BSD 3-Clause의 [Freedoom 0.13.0](https://github.com/freedoom/freedoom/tree/v0.13.0), Emscripten WebAssembly 빌드를 사용합니다. 공개된 [doom-wasm](https://github.com/gabrielbotandev/doom-wasm) 빌드를 커밋과 SHA-256으로 고정하며, 전체 라이선스와 크레딧은 `public/doom/licenses/`에 포함합니다.
+商用 DOOM のゲームデータは含みません。ブラウザー版は GPL-2.0-or-later の [Chocolate Doom](https://github.com/chocolate-doom/chocolate-doom)、BSD 3-Clause の [Freedoom 0.13.0](https://github.com/freedoom/freedoom/tree/v0.13.0)、Emscripten による WebAssembly ビルドを使用します。公開されている [doom-wasm](https://github.com/gabrielbotandev/doom-wasm) ビルドをコミットと SHA-256 で固定し、ライセンス全文とクレジットを `public/doom/licenses/` に含めています。
 
-DOOM은 id Software의 상표이며, TANEBI 95는 id Software 또는 Microsoft와 제휴하거나 보증받은 프로젝트가 아닙니다.
+DOOM は id Software の商標です。TANEBI 95 は id Software または Microsoft と提携しておらず、両社の承認を受けたプロジェクトではありません。
