@@ -1,13 +1,13 @@
 [CmdletBinding()]
 param(
-    [string]$Output = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\videos\tanebi-introduction-ja.mp4')
+    [string]$Output = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\videos\tanebi-introduction-ja-compiler.mp4')
 )
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$frameRoot = Join-Path $repositoryRoot 'artifacts\videos\tanebi-intro-frames'
+$frameRoot = Join-Path $repositoryRoot 'artifacts\videos\tanebi-intro-compiler-frames'
 New-Item -ItemType Directory -Force -Path $frameRoot, (Split-Path -Parent $Output) | Out-Null
 
 $fontRegular = 'Yu Gothic'
@@ -82,7 +82,7 @@ function New-Slide([int]$index, [string]$eyebrow, [string]$title, [string[]]$lin
         $graphics.DrawRectangle($border, 74, 222, 1130, 380)
         $y = 260
         foreach ($line in $code) {
-            $brush = if ($line.TrimStart().StartsWith('#')) { $muted } elseif ($line -match '^(let|repeat|if|print)') { $teal } else { $white }
+            $brush = if ($line.TrimStart().StartsWith('#')) { $muted } elseif ($line.TrimStart() -match '^(fn|let|while|if|print|println)\b') { $teal } else { $white }
             $graphics.DrawString($line, $codeFont, $brush, 112, $y)
             $y += 49
         }
@@ -108,19 +108,19 @@ function New-Slide([int]$index, [string]$eyebrow, [string]$title, [string[]]$lin
 }
 
 $slides = @()
-$slides += New-Slide 1 'PROGRAMMING LANGUAGE' 'TANEBI（種火）' @('一行のコードが、世界に火を灯す。', '小さな言語から、創造の世界へ。')
-$slides += New-Slide 2 'SMALL, BUT COMPLETE' '言語の中身を見せる。' @('Lexer → Parser → AST → Interpreter', 'Go標準ライブラリだけで実装', '読みやすく、拡張しやすい構造')
-$slides += New-Slide 3 'UNICODE SYNTAX' '世界中の言葉で書ける。' @() @(
-    '# 日本語・韓国語・英語の識別子',
-    'let 名前 = "アカギ"',
-    'let 種火 = 3',
-    'repeat 種火 {',
-    '    print 名前 + "の世界が目を覚ます"',
+$slides += New-Slide 1 'プログラミング言語' 'TANEBI' @('一行のコードが、世界に火を灯す。', 'Goで解析し、ネイティブ実行ファイルへ。')
+$slides += New-Slide 2 'コンパイラーの構成' '言語の中身を見せる。' @('字句解析 → 構文解析 → 型検査', 'GoフロントエンドからRustを生成', 'rustcでネイティブ実行ファイルへ')
+$slides += New-Slide 3 'Unicode識別子' '世界中の言葉で書ける。' @() @(
+    'fn main() {',
+    '    let 名前:str = "アカギ";',
+    '    let 種火:u64 = 3;',
+    '    print(名前);',
+    '    println("の世界が目を覚ます");',
     '}'
 )
-$slides += New-Slide 4 'DETERMINISTIC BY DESIGN' '同じコード、同じ結果。' @('暗黙の乱数・時刻・ネットワークをコアから分離', '数値・文字列・真偽値を明示的に扱う', '小さく予測可能な創作エンジン')
-$slides += New-Slide 5 'ONE SPARK, MANY WORLDS' 'CLIからTANEBI 95へ。' @('単一のGo CLIでスクリプトを実行', 'WebAssemblyでブラウザーへ展開', 'TANEBI 95のシステム構成を生成')
-$slides += New-Slide 6 'AKAGI UNIVERSE' '種火から、世界へ。' @('TANEBIはこれから関数・List・Mapへ成長する。', 'github.com/miroqaan/tanebi-lang', '一行目を書けば、世界はもう始まっている。')
+$slides += New-Slide 4 '明示的な型' '型を確かめてから動かす。' @('u64・bool・strを明示的に扱う', '関数・条件分岐・whileによる繰り返し', 'メモリーとI/Oは組み込み関数で操作')
+$slides += New-Slide 5 'ホストから独立OSへ' '一つの言語、一つのCLI。' @('check・build・run・emitに統一', 'runはコンパイル後のバイナリーを実行', 'UEFI向けにTANEBI 95のOSロジックも生成')
+$slides += New-Slide 6 'AKAGI UNIVERSE' '一行のコードから、世界へ。' @('go run ./cmd/tanebi run examples/awakening.tanebi', 'github.com/miroqaan/tanebi-lang', '短いサンプルから、コンパイラーの中へ。')
 
 $ffmpeg = Get-Command ffmpeg -ErrorAction Stop
 $inputs = @()

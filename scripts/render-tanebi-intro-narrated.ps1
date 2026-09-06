@@ -1,14 +1,16 @@
 [CmdletBinding()]
 param(
-    [string]$Output = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\videos\tanebi-introduction-ja-narrated-1440p.mp4'),
-    [string]$Voice = 'ja-JP-NanamiNeural'
+    [string]$Output = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\videos\tanebi-introduction-ja-compiler-native-1440p.mp4'),
+    [string]$Voice = 'ja-JP-NanamiNeural',
+    [switch]$FramesOnly
 )
 
 $ErrorActionPreference = 'Stop'
+if ($Voice -notmatch '^ja-JP-') { throw 'This introduction requires a Japanese narration voice.' }
 Add-Type -AssemblyName System.Drawing
 
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$workRoot = Join-Path $repositoryRoot 'artifacts\videos\tanebi-intro-narrated'
+$workRoot = Join-Path $repositoryRoot 'artifacts\videos\tanebi-intro-compiler-native'
 $frameRoot = Join-Path $workRoot 'frames'
 $audioRoot = Join-Path $workRoot 'audio'
 $segmentRoot = Join-Path $workRoot 'segments'
@@ -32,8 +34,42 @@ function Get-CodeLines([string]$relativePath, [int]$start, [int]$end) {
     return $result
 }
 
+function Get-CodeExcerpt([string]$relativePath, [string]$pattern, [int]$count) {
+    $all = Get-Content -LiteralPath (Join-Path $repositoryRoot $relativePath) -Encoding UTF8
+    for ($index = 0; $index -lt $all.Count; $index++) {
+        if ($all[$index] -match $pattern) {
+            return Get-CodeLines $relativePath ($index + 1) ($index + $count)
+        }
+    }
+    throw "Code excerpt anchor not found: $relativePath / $pattern"
+}
+
 function New-Font([string]$family, [float]$size, [System.Drawing.FontStyle]$style = [System.Drawing.FontStyle]::Regular) {
     return [System.Drawing.Font]::new($family, $size, $style, [System.Drawing.GraphicsUnit]::Pixel)
+}
+
+function Get-WrappedCode($graphics, $font, $lines) {
+    $rows = @()
+    foreach ($line in $lines) {
+        $remaining = $line.Text.Replace("`t", '    ')
+        $number = $line.Number
+        do {
+            $length = $remaining.Length
+            while ($length -gt 0 -and $graphics.MeasureString($remaining.Substring(0, $length), $font).Width -gt 710) {
+                $length--
+            }
+            if ($length -lt $remaining.Length) {
+                $space = $remaining.LastIndexOf(' ', [math]::Max(0, $length - 1))
+                if ($space -gt ($length / 2)) { $length = $space }
+            }
+            $rows += [pscustomobject]@{ Number = $number; Text = $remaining.Substring(0, $length) }
+            $remaining = $remaining.Substring($length)
+            if ($remaining.Length -gt 0) { $remaining = '    ' + $remaining.TrimStart() }
+            $number = ''
+        } while ($remaining.Length -gt 0)
+    }
+    if ($rows.Count -gt 18) { throw "Code excerpt has $($rows.Count) visual rows; shorten it instead of clipping." }
+    return $rows
 }
 
 function Draw-Flame($graphics, [float]$x, [float]$y, [float]$scale) {
@@ -81,11 +117,12 @@ function New-SceneFrame($scene, [int]$index, [int]$count) {
     $eyebrowFont = New-Font 'Yu Gothic' 19 ([System.Drawing.FontStyle]::Bold)
     $titleFont = New-Font 'Yu Gothic' 38 ([System.Drawing.FontStyle]::Bold)
     $pathFont = New-Font 'Consolas' 17
-    $codeFont = New-Font 'MS Gothic' 21
+    $codeFont = New-Font 'Consolas' 19
     $lineNumberFont = New-Font 'Consolas' 18
     $noteTitleFont = New-Font 'Yu Gothic' 21 ([System.Drawing.FontStyle]::Bold)
     $noteFont = New-Font 'Yu Gothic' 20
     $footerFont = New-Font 'Yu Gothic' 15
+    $outputFont = New-Font 'MS Gothic' 17
 
     $graphics.FillRectangle($orange, 0, 0, 10, $height)
     $graphics.FillRectangle($teal, 10, 0, 4, $height)
@@ -98,20 +135,17 @@ function New-SceneFrame($scene, [int]$index, [int]$count) {
     $graphics.FillRectangle($lineBrush, 48, 132, 805, 42)
     $graphics.DrawString($scene.Path, $pathFont, $muted, 68, 143)
 
-    $graphics.SetClip([System.Drawing.Rectangle]::new(49, 175, 803, 472))
     $y = 191
-    foreach ($line in $scene.Code) {
-        if ($y -gt 606) { break }
+    foreach ($line in (Get-WrappedCode $graphics $codeFont $scene.Code)) {
         $graphics.DrawString(('{0,3}' -f $line.Number), $lineNumberFont, $muted, 64, $y)
         $brush = $white
         $trimmed = $line.Text.TrimStart()
         if ($trimmed.StartsWith('//') -or $trimmed.StartsWith('#')) { $brush = $muted }
-        elseif ($trimmed -match '^(func|type|const|var|if|for|switch|case|return|let|repeat|print|else)\b') { $brush = $teal }
+        elseif ($trimmed -match '^(func|fn|type|const|var|if|for|while|switch|case|return|let|print|println|else)\b') { $brush = $teal }
         elseif ($line.Text -match '"') { $brush = $orange }
-        $graphics.DrawString($line.Text.Replace("`t", '    '), $codeFont, $brush, 120, $y - 1)
-        $y += 27
+        $graphics.DrawString($line.Text, $codeFont, $brush, 120, $y - 1)
+        $y += 25
     }
-    $graphics.ResetClip()
 
     $graphics.FillRectangle($notePanel, 875, 132, 357, 516)
     $graphics.DrawRectangle($border, 875, 132, 357, 516)
@@ -123,117 +157,165 @@ function New-SceneFrame($scene, [int]$index, [int]$count) {
         $format.Trimming = [System.Drawing.StringTrimming]::Word
         $graphics.DrawString($note, $noteFont, $white, [System.Drawing.RectangleF]::new(925, $noteY, 278, 78), $format)
         $format.Dispose()
-        $noteY += 94
+        if ($scene.Output) { $noteY += 62 } else { $noteY += 94 }
+    }
+
+    if ($scene.Output) {
+        $graphics.DrawString('コンパイル後の実行結果', $noteTitleFont, $teal, 900, 425)
+        $outputY = 470
+        foreach ($outputLine in $scene.Output) {
+            if ($graphics.MeasureString($outputLine, $outputFont).Width -gt 310) {
+                throw "Output line does not fit: $outputLine"
+            }
+            $graphics.DrawString($outputLine, $outputFont, $white, 900, $outputY)
+            $outputY += 27
+        }
     }
 
     $graphics.DrawString(('AKAGI UNIVERSE  ·  TANEBI  ·  {0}/{1}' -f $index, $count), $footerFont, $muted, 50, 677)
 
     $path = Join-Path $frameRoot ('scene-{0:d2}.png' -f $index)
     $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
-    foreach ($resource in @($eyebrowFont, $titleFont, $pathFont, $codeFont, $lineNumberFont, $noteTitleFont, $noteFont, $footerFont, $white, $muted, $orange, $teal, $codePanel, $notePanel, $lineBrush, $border, $graphics, $bitmap)) {
+    foreach ($resource in @($eyebrowFont, $titleFont, $pathFont, $codeFont, $lineNumberFont, $noteTitleFont, $noteFont, $footerFont, $outputFont, $white, $muted, $orange, $teal, $codePanel, $notePanel, $lineBrush, $border, $graphics, $bitmap)) {
         $resource.Dispose()
     }
     return $path
 }
 
+$goCommand = Get-Command go -ErrorAction SilentlyContinue
+$go = if ($goCommand) { $goCommand.Source } else { Join-Path $env:USERPROFILE 'sdk\go1.27.1\bin\go.exe' }
+Push-Location $repositoryRoot
+try {
+    $sampleOutput = @(& $go run ./cmd/tanebi run examples/awakening.tanebi)
+    if ($LASTEXITCODE -ne 0) { throw 'Sample execution failed.' }
+}
+finally { Pop-Location }
+if (($sampleOutput -join "`n") -cne "アカギの世界が目を覚ます`nアカギの世界が目を覚ます`nアカギの世界が目を覚ます`n種火は消えない") {
+    throw 'Sample output no longer matches the narration.'
+}
+
 $scenes = @(
     [pscustomobject]@{
-        Eyebrow = '01 · LANGUAGE OVERVIEW'
-        Title = 'TANEBI（種火）とは'
-        Path = 'README.md'
-        Code = Get-CodeLines 'README.md' 1 15
-        Notes = @('Go製のインタープリター', '小さく決定論的', 'Unicode識別子')
-        Narration = '種火。一行のコードが、世界に火を灯す。TANEBIは、Goで実装した、小さくて決定論的なインタープリター言語です。'
-    },
-    [pscustomobject]@{
-        Eyebrow = '02 · GO CLI'
-        Title = '入口はシンプルなmain関数'
-        Path = 'cmd/tanebi/main.go'
-        Code = Get-CodeLines 'cmd\tanebi\main.go' 10 27
-        Notes = @('Go 1.22以上', '標準ライブラリのみ', 'tanebi.Runを呼び出す')
-        Narration = 'CLIのmain関数は、指定されたTANEBIファイルを読み込み、公開関数tanebi.Runへ渡します。外部ライブラリは使わず、Goの標準ライブラリだけで動作します。'
-    },
-    [pscustomobject]@{
-        Eyebrow = '03 · PIPELINE'
-        Title = 'Lexer → Parser → Interpreter'
-        Path = 'internal/tanebi/interpreter.go'
-        Code = Get-CodeLines 'internal\tanebi\interpreter.go' 29 47
-        Notes = @('tokenize：字句解析', 'parse：構文解析', 'execute：実行')
-        Narration = '実行の中心はRun関数です。tokenizeで字句解析し、parseで抽象構文木を作り、executeで順番に実行します。処理の境界が明確なので、学習にも拡張にも向いています。'
-    },
-    [pscustomobject]@{
-        Eyebrow = '04 · LEXER'
-        Title = '文字を意味のあるTokenへ'
-        Path = 'internal/tanebi/lexer.go'
-        Code = Get-CodeLines 'internal\tanebi\lexer.go' 8 32
-        Notes = @('tokenize / number', 'identifier / stringLiteral', 'runeでUnicode対応')
-        Narration = 'Lexerでは、tokenize、number、identifier、stringLiteralが文字列をトークンに変換します。ソースをruneとして扱うため、日本語や韓国語を変数名に使用できます。'
-    },
-    [pscustomobject]@{
-        Eyebrow = '05 · PARSER'
-        Title = '構文をASTへ組み立てる'
-        Path = 'internal/tanebi/parser.go'
-        Code = Get-CodeLines 'internal\tanebi\parser.go' 35 62
-        Notes = @('statement：文を解析', 'expression：式を解析', '演算子の優先順位を保持')
-        Narration = 'Parserのstatement関数は、let、print、repeat、if、代入を構文木へ変換します。expressionからprimaryまで分けた関数が、論理演算、比較、四則演算の優先順位を保ちます。'
-    },
-    [pscustomobject]@{
-        Eyebrow = '06 · INTERPRETER'
-        Title = 'ASTを評価して結果を出す'
-        Path = 'internal/tanebi/interpreter.go'
-        Code = Get-CodeLines 'internal\tanebi\interpreter.go' 48 75
-        Notes = @('execute：文の実行', 'evaluate：式の評価', 'evaluateBinary / compareValues')
-        Narration = 'Interpreterではexecuteが文を処理し、evaluateとevaluateBinaryが式を評価します。valuesEqualとcompareValuesが比較を担当し、型の暗黙変換を避けて予測可能な結果を守ります。'
-    },
-    [pscustomobject]@{
-        Eyebrow = '07 · REAL PROGRAM'
-        Title = '実際のTANEBIコードを実行'
+        Eyebrow = '01 · 言語の紹介'
+        Title = '小さな言語、TANEBI'
         Path = 'examples/awakening.tanebi'
-        Code = Get-CodeLines 'examples\awakening.tanebi' 1 14
-        Notes = @('repeatで3回実行', 'ifで条件分岐', '実出力：種火は消えない')
-        Narration = 'これは実際のサンプルコードです。Unicodeの変数、repeatによる繰り返し、ifによる条件分岐を使っています。Go CLIで実行すると、アカギの世界が三回目を覚まし、種火は消えないと出力されます。'
+        Code = Get-CodeLines 'examples\awakening.tanebi' 2 16
+        Notes = @('Go製フロントエンド', 'Rust経由でネイティブへ', '日本語の変数名')
+        Narration = 'タネビは、Goで作ったコンパイラーを持つプログラミング言語です。型を確かめたソースを、ネイティブ実行ファイルへ変換します。実装を見ながら、その仕組みをたどってみましょう。'
     },
     [pscustomobject]@{
-        Eyebrow = '08 · WEBASSEMBLY'
-        Title = '同じ言語コアをブラウザーへ'
-        Path = 'cmd/tanebi-wasm/main.go'
-        Code = Get-CodeLines 'cmd\tanebi-wasm\main.go' 14 35
-        Notes = @('syscall/jsブリッジ', 'tanebiRunを公開', 'TANEBI 95で再利用')
-        Narration = 'WebAssembly版では、run関数をtanebiRunとしてブラウザーへ公開し、出力とエラーをJavaScriptへ返します。この橋によって、同じ言語コアがTANEBI 95のデスクトップ上でも動きます。'
+        Eyebrow = '02 · コマンドライン'
+        Title = '一つのCLIで検査から実行まで'
+        Path = 'cmd/tanebi/main.go  |  main（抜粋）'
+        Code = Get-CodeExcerpt 'cmd\tanebi\main.go' '^func main\(' 9
+        Notes = @('checkで静的検証', 'buildで実行ファイルを生成', 'runもコンパイルして実行')
+        Narration = '入口は、統一されたコマンドラインです。チェックで検査し、ビルドで実行ファイルを生成します。ランを選んだ場合も、まずコンパイルし、できたバイナリーを実行します。'
     },
     [pscustomobject]@{
-        Eyebrow = '09 · AKAGI UNIVERSE'
-        Title = '一行のコードから、世界へ。'
-        Path = 'github.com/miroqaan/tanebi-lang'
-        Code = Get-CodeLines 'README.md' 17 31
-        Notes = @('Lexer', 'Parser / AST', 'Interpreter')
-        Narration = 'Lexer、Parser、AST、Interpreter。小さな構造を積み重ね、一行のコードから世界を作る。それがTANEBIです。'
+        Eyebrow = '03 · コンパイルの流れ'
+        Title = 'ソースからネイティブ実行ファイルへ'
+        Path = 'internal/native/compiler.go  |  Compile（抜粋）'
+        Code = Get-CodeExcerpt 'internal\native\compiler.go' '^func Compile\(' 9
+        Notes = @('字句解析・構文解析', '名前と型を検証', 'Rustコードを生成')
+        Narration = 'コンパイル関数は、複数のソースを一つのプログラムとして扱います。構文を読み取り、名前や型を検査してから、Rustのコードを生成します。処理ごとに役割を分けた構成です。'
+    },
+    [pscustomobject]@{
+        Eyebrow = '04 · 字句解析'
+        Title = '文字をトークンに分ける'
+        Path = 'internal/native/syntax.go  |  lex（抜粋）'
+        Code = Get-CodeExcerpt 'internal\native\syntax.go' '^\s*if unicode.IsLetter\(c\)' 8
+        Notes = @('lex：文字列をトークンへ', 'Unicodeの文字を判定', '名前と位置を記録')
+        Narration = '字句解析のレックス関数は、文字列を意味のある単位に分けます。ここでは文字や数字を読み取り、一つの名前として記録しています。日本語の変数名も、同じ仕組みで扱います。'
+    },
+    [pscustomobject]@{
+        Eyebrow = '05 · 構文解析'
+        Title = '文の構造を組み立てる'
+        Path = 'internal/native/syntax.go  |  statement（抜粋）'
+        Code = Get-CodeExcerpt 'internal\native\syntax.go' '^\s*case "let":' 14
+        Notes = @('statement：文を解析', '型付きletを読み取る', 'expression：式を解析')
+        Narration = 'ステートメント関数は、変数宣言や条件分岐、繰り返しなどの文を解析します。レットでは変数名だけでなく、型も読み取ります。その後の式と組み合わせて、宣言の構造を作ります。'
+    },
+    [pscustomobject]@{
+        Eyebrow = '06 · コード生成'
+        Title = '型を確かめ、Rustへ変換する'
+        Path = 'internal/native/emit.go  |  emitExpr（抜粋）'
+        Code = Get-CodeExcerpt 'internal\native\emit.go' '^\s*case "binary":' 12
+        Notes = @('型検査後にコード生成', 'emitExprで式を変換', 'rustcで実行ファイルへ')
+        Narration = '式のコード生成では、型の検査を通った式をRustへ変換します。数値の加算などには、64ビットのラップ演算を使います。その後、Rustのコンパイラーがネイティブ実行ファイルを生成します。'
+    },
+    [pscustomobject]@{
+        Eyebrow = '07 · 実際のプログラム'
+        Title = 'サンプルを実行する'
+        Path = 'examples/awakening.tanebi'
+        Code = Get-CodeLines 'examples\awakening.tanebi' 2 16
+        Notes = @('whileで3回出力', 'ifで条件を判定', 'mainから実行')
+        Output = $sampleOutput
+        Narration = 'サンプルをコンパイルして実行してみましょう。メイン関数から始まり、ワイルで同じメッセージを三回出力します。その後はイフで条件を判定し、最後に、種火は消えない、と表示されました。'
+    },
+    [pscustomobject]@{
+        Eyebrow = '08 · OSへの応用'
+        Title = '同じコンパイラーで独立OSへ'
+        Path = 'examples/native/minimal.tanebi  |  entry'
+        Code = Get-CodeExcerpt 'examples\native\minimal.tanebi' '^fn entry\(' 5
+        Notes = @('-target uefiでビルド', '最小エントリーポイントの例', 'OSのロジックもTANEBIで記述')
+        Narration = '同じコンパイラーで、UEFI向けの実行ファイルも作れます。これは、入口となる関数の最小の例です。独立OSのタネビ95も、デスクトップや入力などのロジックをタネビで記述しています。'
+    },
+    [pscustomobject]@{
+        Eyebrow = '09 · ここから始める'
+        Title = 'コードを手に取り、試す'
+        Path = 'ターミナル  |  実行コマンド'
+        Code = @(
+            [pscustomobject]@{ Number = ''; Text = 'git clone https://github.com/miroqaan/tanebi-lang.git' }
+            [pscustomobject]@{ Number = ''; Text = 'cd tanebi-lang' }
+            [pscustomobject]@{ Number = ''; Text = '' }
+            [pscustomobject]@{ Number = ''; Text = 'go run ./cmd/tanebi check examples/awakening.tanebi' }
+            [pscustomobject]@{ Number = ''; Text = 'go run ./cmd/tanebi run examples/awakening.tanebi' }
+            [pscustomobject]@{ Number = ''; Text = 'go test ./...' }
+            [pscustomobject]@{ Number = ''; Text = '' }
+            [pscustomobject]@{ Number = ''; Text = 'https://github.com/miroqaan/tanebi-lang' }
+        )
+        Notes = @('ソースコードを公開', '短いサンプルから試す', '一行のコードから、世界へ')
+        Narration = 'ソースコードとサンプルは、ギットハブで公開しています。まずは短いプログラムを動かし、気になる関数から読んでみてください。一行のコードから、世界へ。'
     }
 )
 
+$sceneJson = $scenes | ConvertTo-Json -Depth 8
+if ($sceneJson -match '[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7FF\uFFA0-\uFFDC]|WebAssembly|WASM|ブラウザ|JavaScript|&#x20;|韓国語') {
+    throw 'Unexpected content language or excluded topic in the video.'
+}
+[IO.File]::WriteAllText((Join-Path $workRoot 'scenes.json'), $sceneJson, [Text.UTF8Encoding]::new($false))
+
 $segments = @()
+$timeline = @()
+$startTime = 0.0
 for ($index = 0; $index -lt $scenes.Count; $index++) {
     $number = $index + 1
     $scene = $scenes[$index]
     $frame = New-SceneFrame $scene $number $scenes.Count
+    if ($FramesOnly) { continue }
     $audio = Join-Path $audioRoot ('scene-{0:d2}.mp3' -f $number)
     $segment = Join-Path $segmentRoot ('scene-{0:d2}.mp4' -f $number)
 
-    & $python -m edge_tts --voice $Voice --rate=-4% --text $scene.Narration --write-media $audio
+    & $python -3.14 -m edge_tts --voice $Voice --rate=-3% --text $scene.Narration --write-media $audio
     if ($LASTEXITCODE -ne 0) { throw "Japanese narration failed for scene $number." }
 
     $durationText = & $ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 $audio
-    $duration = [math]::Ceiling(([double]::Parse($durationText, [Globalization.CultureInfo]::InvariantCulture) + 0.45) * 100) / 100
-    & $ffmpeg -y -loop 1 -framerate 30 -i $frame -i $audio -t $duration -vf "format=yuv420p" -af 'apad=pad_dur=0.45' -c:v libx264 -preset slow -tune stillimage -crf 12 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:a aac -b:a 160k -ar 48000 -ac 2 -shortest $segment
+    $duration = [math]::Ceiling(([double]::Parse($durationText, [Globalization.CultureInfo]::InvariantCulture) + 0.65) * 30) / 30
+    & $ffmpeg -hide_banner -loglevel error -y -loop 1 -framerate 30 -i $frame -i $audio -t $duration -vf "format=yuv420p" -af 'loudnorm=I=-18:TP=-2:LRA=7,apad=pad_dur=0.65' -c:v libx264 -preset fast -tune stillimage -crf 12 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:a aac -b:a 192k -ar 48000 -ac 2 -shortest $segment
     if ($LASTEXITCODE -ne 0) { throw "Video segment render failed for scene $number." }
     $segments += $segment
+    $timeline += [pscustomobject]@{ Scene = $number; Title = $scene.Title; Start = $startTime; Duration = $duration; Frame = $frame; Audio = $audio; Segment = $segment; Narration = $scene.Narration }
+    $startTime += $duration
+    Write-Host ("[ok] Scene {0}/{1}: {2:N2}s" -f $number, $scenes.Count, $duration)
 }
 
+if ($FramesOnly) { Write-Host "Rendered all scene frames: $frameRoot"; return }
+[IO.File]::WriteAllText((Join-Path $workRoot 'timeline.json'), ($timeline | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
 $concatPath = Join-Path $workRoot 'segments.txt'
 $concatLines = $segments | ForEach-Object { "file '$($_.Replace("'", "''"))'" }
 Set-Content -LiteralPath $concatPath -Value $concatLines -Encoding UTF8
 
-& $ffmpeg -y -fflags +genpts -f concat -safe 0 -i $concatPath -c:v copy -c:a aac -b:a 160k -ar 48000 -ac 2 -af 'aresample=async=1:first_pts=0' -movflags +faststart $Output
+& $ffmpeg -hide_banner -loglevel error -y -fflags +genpts -f concat -safe 0 -i $concatPath -c:v copy -c:a aac -b:a 192k -ar 48000 -ac 2 -af 'aresample=async=1:first_pts=0' -movflags +faststart $Output
 if ($LASTEXITCODE -ne 0) { throw 'Final TANEBI narrated video assembly failed.' }
 
 Write-Host "Rendered narrated TANEBI introduction: $Output"
