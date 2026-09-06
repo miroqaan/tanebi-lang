@@ -1,3 +1,4 @@
+# Historical Web UI video producer; not the current native OS or compiler introduction.
 [CmdletBinding()]
 param(
     [string]$Output = (Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))) 'artifacts\videos\tanebi95-os-introduction-ja-1080p.mp4'),

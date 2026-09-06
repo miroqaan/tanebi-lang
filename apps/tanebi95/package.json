@@ -6,9 +6,7 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "wasm": "powershell -ExecutionPolicy Bypass -File ./scripts/build-wasm.ps1",
     "prepare:doom": "pwsh -NoLogo -NoProfile -File ./scripts/prepare-doom.ps1",
-    "test:wasm": "node ./scripts/test-wasm.mjs",
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",

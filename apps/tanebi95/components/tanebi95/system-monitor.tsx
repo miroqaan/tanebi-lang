@@ -29,26 +29,26 @@ export function SystemMonitor({ openWindow }: { openWindow: (id: FeatureTarget) 
       <section className="monitor-metrics">
         <article><Gauge /><span>稼働時間</span><strong>{minutes}:{remainder}</strong></article>
         <article><MemoryStick /><span>JSヒープ</span><strong>{memory === null ? 'N/A' : `${memory} MB`}</strong></article>
-        <article><Cpu /><span>Runtime</span><strong>WASM</strong></article>
-        <article><ShieldCheck /><span>Mode</span><strong>SAFE</strong></article>
+        <article><Cpu /><span>Runtime</span><strong>JS</strong></article>
+        <article><ShieldCheck /><span>Mode</span><strong>ARCHIVE</strong></article>
       </section>
 
       <section className="architecture-map" aria-label="TANEBI 95 architecture">
         <div><strong>React / vinext</strong><span>Window shell</span></div><b>→</b>
-        <div><strong>Go WebAssembly</strong><span>TANEBI host</span></div><b>→</b>
-        <div><strong>Lexer · Parser · AST</strong><span>User space</span></div>
+        <div><strong>固定設定</strong><span>Desktop profile</span></div><b>→</b>
+        <div><strong>TANEBI サンプル</strong><span>閲覧専用</span></div>
       </section>
 
       <section className="feature-tour">
         <h2><Flame /> FEATURE TOUR</h2>
         <div>
-          <button type="button" onClick={() => openWindow('studio')}><TerminalSquare /><strong>TANEBI Studio</strong><span>Unicodeコードを編集し、Go/WASMで実行</span></button>
+          <button type="button" onClick={() => openWindow('studio')}><TerminalSquare /><strong>TANEBI Studio</strong><span>型付きソースとPC用コマンドを表示</span></button>
           <button type="button" onClick={() => openWindow('doom')}><Gamepad2 /><strong>TANEBI 95 DOOM</strong><span>Chocolate Doom + FreedoomをWebAssemblyで実行</span></button>
           <button type="button" onClick={() => openWindow('media')}><Clapperboard /><strong>Media Player</strong><span>アカギユニバース動画を音声付き再生</span></button>
         </div>
       </section>
 
-      <footer className="status-bar">All systems operational · deterministic core online</footer>
+      <footer className="status-bar">Web UI アーカイブ · ブラウザー内の TANEBI 実行機能は廃止済み</footer>
     </div>
   );
 }

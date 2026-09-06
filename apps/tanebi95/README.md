@@ -1,10 +1,10 @@
 # TANEBI 95
 
-このディレクトリは、1990年代のデスクトップインターフェースに着想を得た TANEBI 95 の Web 版です。ブラウザー内でウィンドウを移動・最小化・最大化し、TANEBI Studio で実際の TANEBI コードを実行できます。QEMU で起動する独立 OS 版は [tanebi-95](https://github.com/miroqaan/tanebi-95) を参照してください。
+このディレクトリは、1990年代のデスクトップに着想を得た旧 Web UI のアーカイブです。TANEBI のコンパイラー一本化に伴い、インタープリター、実行用 Go/WASM ブリッジ、配布バイナリー、起動スクリプトの実行機能を削除しました。独立 OS の現在の実装は [tanebi-95](https://github.com/miroqaan/tanebi-95) を参照してください。これは OS 本体ではありません。
 
 ## 主な機能
 
-- **TANEBI Studio**: Unicode 識別子を使った TANEBI コードを Go/WebAssembly で実行します。
+- **TANEBI Studio**: コンパイラー用の型付きソースと PC での実行コマンドを表示します。閲覧専用で、ブラウザー内では実行しません。
 - **TANEBI 95 DOOM**: 公開されている Chocolate Doom エンジンを WebAssembly で動かし、Freedoom Phase 2 のゲームデータを使用します。
 - **メディアプレイヤー**: アカギユニバースの指定 YouTube 動画を、16分14秒から音声付きで再生します。
 - **システムモニター**: 稼働時間、JavaScript ヒープ、ランタイムの境界、機能ツアーを表示します。
@@ -14,20 +14,17 @@
 ```text
 ブラウザーデスクトップ (React / vinext)
               ↓
-Go WebAssembly ホスト (cmd/tanebi-wasm)
-              ↓
-TANEBI スクリプト層 (Lexer → Parser → AST → Interpreter)
+固定システム設定 / 閲覧専用 TANEBI サンプル
 ```
 
 この境界は、`gopher-os` の Rust カーネルと Go ユーザー空間の分離を参考にしています。コードはコピーしていません。この Web 版は独自のブラウザーデスクトップであり、実際に起動する OS や Microsoft Windows の配布物ではありません。
 
 ## 開発
 
-Node.js 22.13 以降と Go 1.22 以降が必要です。
+Node.js 22.13 以降が必要です。TANEBI コードの実行には、別途 PC 側の `tanebi` コンパイラーと Rust が必要です。
 
 ```powershell
 npm install
-npm run wasm
 npm run prepare:doom
 npm run dev
 ```
@@ -36,12 +33,11 @@ npm run dev
 
 ```powershell
 npm run lint
-npm run test:wasm
 npm run build
 npm audit --omit=dev --audit-level=high
 ```
 
-`public/system.tanebi` は起動時に実行され、デスクトップ名、キャッチコピー、アイコンのラベル、起動メッセージを設定します。
+デスクトップの名称とラベルは固定データです。TANEBI の字句解析・構文解析・評価処理を JavaScript で代替する経路はありません。DOOM 用の第三者 WebAssembly エンジンは TANEBI の処理系とは別のため、そのライセンスと資産は保持しています。
 
 ## DOOM のライセンスと帰属
 

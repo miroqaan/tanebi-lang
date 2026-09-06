@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { loadTanebi } from '@/lib/tanebi-runtime';
 import { DoomPlayer } from './doom-player';
 import { MediaPlayer } from './media-player';
 import { SystemMonitor } from './system-monitor';
@@ -50,7 +49,7 @@ const defaultProfile: SystemProfile = {
     documents: 'ドキュメント',
     recycle: 'ごみ箱',
   },
-  boot: [],
+  boot: ['Web UI アーカイブ — TANEBI インタープリターは廃止されました。'],
 };
 
 const icons = {
@@ -75,27 +74,14 @@ const initialWindows: Record<WindowId, WindowModel> = {
   about: { id: 'about', title: 'TANEBI 95 について', icon: Info, x: 380, y: 125, width: 480, height: 330, z: 1, open: false, minimized: false, maximized: false },
 };
 
-function parseProfile(output: string): SystemProfile {
-  const profile: SystemProfile = { ...defaultProfile, labels: { ...defaultProfile.labels }, boot: [] };
-  for (const line of output.trim().split('\n')) {
-    const [command, key, ...rest] = line.split('|');
-    const value = rest.length ? rest.join('|') : key;
-    if (command === 'SYSTEM' && key) profile.name = key;
-    if (command === 'MOTTO' && key) profile.motto = key;
-    if (command === 'ICON' && key && value && key in icons) profile.labels[key as WindowId] = value;
-    if (command === 'BOOT' && key) profile.boot.push(key);
-  }
-  return profile;
-}
-
 export function DesktopShell() {
-  const [profile, setProfile] = useState(defaultProfile);
+  const profile = defaultProfile;
   const [windows, setWindows] = useState(initialWindows);
   const [nextZ, setNextZ] = useState(3);
   const [startOpen, setStartOpen] = useState(false);
   const [shutdown, setShutdown] = useState(false);
   const [booting, setBooting] = useState(true);
-  const [bootMessage, setBootMessage] = useState('Loading Go host services...');
+  const bootMessage = 'Web UI アーカイブを開いています...';
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -104,36 +90,8 @@ export function DesktopShell() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    async function boot() {
-      try {
-        setBootMessage('Igniting TANEBI WebAssembly...');
-        const [execute, response] = await Promise.all([loadTanebi(), fetch('/system.tanebi')]);
-        if (!response.ok) throw new Error(`system profile ${response.status}`);
-        const result = execute(await response.text());
-        if (result.error) throw new Error(result.error);
-        const loaded = parseProfile(result.output);
-        if (!cancelled) {
-          setProfile(loaded);
-          setWindows((current) => {
-            const next = { ...current };
-            for (const id of Object.keys(loaded.labels) as WindowId[]) {
-              if (loaded.labels[id] && next[id]) next[id] = { ...next[id], title: loaded.labels[id] as string };
-            }
-            return next;
-          });
-          setBootMessage(loaded.boot.at(-1) ?? 'TANEBI user space: ignited');
-          setTimeout(() => !cancelled && setBooting(false), 650);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setBootMessage(`Safe mode: ${error instanceof Error ? error.message : String(error)}`);
-          setTimeout(() => !cancelled && setBooting(false), 900);
-        }
-      }
-    }
-    void boot();
-    return () => { cancelled = true; };
+    const timer = setTimeout(() => setBooting(false), 650);
+    return () => clearTimeout(timer);
   }, []);
 
   const openWindows = useMemo(() => Object.values(windows).filter((window) => window.open), [windows]);
@@ -262,14 +220,14 @@ function WindowContent({ id, profile, openWindow }: { id: WindowId; profile: Sys
         <nav className="menu-bar"><span>ファイル(F)</span><span>編集(E)</span><span>表示(V)</span><span>ヘルプ(H)</span></nav>
         <div className="address-bar"><span>アドレス</span><strong>マイ コンピュータ</strong></div>
         <div className="computer-grid">
-          <button type="button"><HardDrive /><span><strong>System Host (C:)</strong><small>Go services · 95 MB</small></span></button>
-          <button type="button" onDoubleClick={() => openWindow('studio')}><TerminalSquare /><span><strong>TANEBI Space (T:)</strong><small>User scripts · WASM</small></span></button>
+          <button type="button"><HardDrive /><span><strong>Web UI (C:)</strong><small>旧デスクトップのアーカイブ</small></span></button>
+          <button type="button" onDoubleClick={() => openWindow('studio')}><TerminalSquare /><span><strong>TANEBI Source (T:)</strong><small>型付きサンプル · 閲覧専用</small></span></button>
           <button type="button" onDoubleClick={() => openWindow('doom')}><Gamepad2 /><span><strong>DOOM Games (D:)</strong><small>Chocolate Doom · Freedoom · WASM</small></span></button>
           <button type="button" onDoubleClick={() => openWindow('media')}><Clapperboard /><span><strong>Akagi Media (M:)</strong><small>YouTube · sound enabled</small></span></button>
           <button type="button" onDoubleClick={() => openWindow('monitor')}><Cpu /><span><strong>System Monitor</strong><small>Runtime · architecture · tour</small></span></button>
           <button type="button" onDoubleClick={() => openWindow('documents')}><FileText /><span><strong>README.TXT</strong><small>Architecture notes</small></span></button>
         </div>
-        <footer className="status-bar">6 個のオブジェクト · TANEBI user space online</footer>
+        <footer className="status-bar">6 個のオブジェクト · Web UI アーカイブ（独立 OS ではありません）</footer>
       </div>
     );
   }
@@ -278,11 +236,11 @@ function WindowContent({ id, profile, openWindow }: { id: WindowId; profile: Sys
       <div className="window-layout">
         <nav className="menu-bar"><span>ファイル(F)</span><span>編集(E)</span><span>表示(V)</span></nav>
         <div className="file-list">
-          <button type="button"><FileCode2 /><span>system.tanebi</span><small>システム構成</small></button>
+          <button type="button" onClick={() => openWindow('studio')}><FileCode2 /><span>program.tanebi</span><small>コンパイラー用サンプル</small></button>
           <button type="button"><BookOpenText /><span>ARCHITECTURE.TXT</span><small>Kernel / Host / User Space</small></button>
           <button type="button"><FileText /><span>AKAGI.TXT</span><small>一行のコードが、世界に火を灯す。</small></button>
         </div>
-        <footer className="status-bar">TANEBIスクリプトがデスクトップ名とアイコンを定義しています。</footer>
+        <footer className="status-bar">名称とアイコンは固定設定です。旧スクリプト実行機能は廃止しました。</footer>
       </div>
     );
   }
@@ -295,8 +253,8 @@ function WindowContent({ id, profile, openWindow }: { id: WindowId; profile: Sys
       <h2>{profile.name}</h2>
       <p>{profile.motto}</p>
       <dl>
-        <div><dt>System</dt><dd>Go host services</dd></div>
-        <div><dt>User space</dt><dd>TANEBI WebAssembly</dd></div>
+        <div><dt>System</dt><dd>React / vinext Web UI アーカイブ</dd></div>
+        <div><dt>TANEBI</dt><dd>コンパイラー用ソース閲覧</dd></div>
         <div><dt>Games</dt><dd>Chocolate Doom · Freedoom · WebAssembly</dd></div>
         <div><dt>Media</dt><dd>YouTube privacy-enhanced player</dd></div>
         <div><dt>Reference</dt><dd>GopherOS boundary architecture</dd></div>
