@@ -32,11 +32,11 @@ $rustup = Resolve-Tool 'rustup' @((Join-Path $env:USERPROFILE '.cargo\bin\rustup
 
 New-Item -ItemType Directory -Force -Path $buildRoot, $efiBootRoot | Out-Null
 
-Write-Host 'Executing TANEBI boot program...'
+Write-Host 'Compiling and running the TANEBI boot program...'
 $systemScript = Join-Path $nativeRoot 'system.tanebi'
 Push-Location $repositoryRoot
 try {
-    $manifestLines = & $go run ./cmd/tanebi $systemScript
+    $manifestLines = & $go run ./cmd/tanebi run $systemScript
     if ($LASTEXITCODE -ne 0) { throw 'TANEBI boot program failed.' }
 }
 finally {

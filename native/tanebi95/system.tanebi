@@ -1,14 +1,15 @@
-# This TANEBI program is executed during the native OS build.
-let 種火 = 3
-let 名前 = "TANEBI 95"
-
-print "SYSTEM=" + 名前
-print "MOTTO=A SPARK BECOMES A WORLD"
-print "COMPUTER=MY COMPUTER"
-print "DOCUMENTS=DOCUMENTS"
-
-if 種火 == 3 {
-    print "STATUS=TANEBI BOOT SCRIPT OK"
-} else {
-    print "STATUS=BOOT SCRIPT ERROR"
+# 初期ネイティブプレビューのビルド時にコンパイル・実行する。
+fn main() {
+    let 種火:u64 = 3;
+    let 名前:str = "TANEBI 95";
+    print("SYSTEM=");
+    println(名前);
+    println("MOTTO=A SPARK BECOMES A WORLD");
+    println("COMPUTER=MY COMPUTER");
+    println("DOCUMENTS=DOCUMENTS");
+    if 種火 == 3 {
+        println("STATUS=TANEBI BOOT SCRIPT OK");
+    } else {
+        println("STATUS=BOOT SCRIPT ERROR");
+    }
 }
