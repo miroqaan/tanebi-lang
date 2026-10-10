@@ -28,7 +28,7 @@ export function TanebiStudio() {
     loadTanebi()
       .then(() => {
         setReady(true);
-        setOutput('TANEBI WebAssembly ready.\n実行ボタンを押してください。');
+        setOutput('TANEBI WebAssemblyの準備ができました。\n実行ボタンを押してください。');
       })
       .catch((error: unknown) => setOutput(`起動エラー: ${error instanceof Error ? error.message : String(error)}`));
   }, []);
@@ -37,7 +37,7 @@ export function TanebiStudio() {
     try {
       const execute = await loadTanebi();
       const result = execute(source);
-      setOutput(result.error ? `TANEBI error: ${result.error}` : result.output || '(出力なし)');
+      setOutput(result.error ? `TANEBIエラー: ${result.error}` : result.output || '(出力なし)');
     } catch (error) {
       setOutput(`起動エラー: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -48,15 +48,15 @@ export function TanebiStudio() {
       <div className="studio-toolbar">
         <Button className="win95-button primary-action" onClick={run} disabled={!ready}><Play /> 実行</Button>
         <Button className="win95-button" onClick={() => { setSource(starter); setOutput('サンプルを復元しました。'); }}><RotateCcw /> 復元</Button>
-        <span className={`runtime-status ${ready ? 'online' : ''}`}><Flame /> {ready ? 'WASM ONLINE' : 'LOADING'}</span>
+        <span className={`runtime-status ${ready ? 'online' : ''}`}><Flame /> {ready ? 'WASM 稼働中' : '読み込み中'}</span>
       </div>
       <div className="studio-panes">
         <div className="studio-pane">
           <label htmlFor="tanebi-source">PROGRAM.TANEBI</label>
           <Textarea id="tanebi-source" className="code-editor" value={source} onChange={(event) => setSource(event.target.value)} spellCheck={false} />
         </div>
-        <section className="studio-pane" aria-label="TANEBI output">
-          <span>OUTPUT</span>
+        <section className="studio-pane" aria-label="TANEBIの出力">
+          <span>出力</span>
           <pre className="console-output" aria-live="polite">{output}</pre>
         </section>
       </div>
