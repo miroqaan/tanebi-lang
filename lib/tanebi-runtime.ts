@@ -28,14 +28,14 @@ function loadScript(source: string): Promise<void> {
     const script = document.createElement('script');
     script.src = source;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`failed to load ${source}`));
+    script.onerror = () => reject(new Error(`${source}の読み込みに失敗しました`));
     document.head.appendChild(script);
   });
 }
 
 async function instantiateGoWasm(go: GoRuntime): Promise<WebAssembly.Instance> {
   const response = await fetch('/tanebi.wasm');
-  if (!response.ok) throw new Error(`failed to load TANEBI runtime (${response.status})`);
+  if (!response.ok) throw new Error(`TANEBIランタイムの読み込みに失敗しました (${response.status})`);
 
   try {
     const result = await WebAssembly.instantiateStreaming(response.clone(), go.importObject);
@@ -50,7 +50,7 @@ async function instantiateGoWasm(go: GoRuntime): Promise<WebAssembly.Instance> {
 export function loadTanebi(): Promise<(source: string) => TanebiResult> {
   runtimePromise ??= (async () => {
     await loadScript('/wasm_exec.js');
-    if (!window.Go) throw new Error('Go WebAssembly bridge is unavailable');
+    if (!window.Go) throw new Error('Go WebAssemblyブリッジを利用できません');
     const go = new window.Go();
     const instance = await instantiateGoWasm(go);
     void go.run(instance);
@@ -58,7 +58,7 @@ export function loadTanebi(): Promise<(source: string) => TanebiResult> {
     for (let attempt = 0; attempt < 100 && !window.tanebiRun; attempt += 1) {
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
-    if (!window.tanebiRun) throw new Error('TANEBI runtime did not start');
+    if (!window.tanebiRun) throw new Error('TANEBIランタイムが起動しませんでした');
     return window.tanebiRun;
   })();
   return runtimePromise;

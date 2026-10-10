@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: '%s | TANEBI 95',
   },
   applicationName: 'TANEBI 95',
-  description: 'A Windows 95-inspired desktop shell powered by the TANEBI language.',
+  description: 'TANEBI言語で動く、Windows 95から着想を得たデスクトップシェル。',
   icons: {
     icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
     shortcut: '/favicon.svg',
